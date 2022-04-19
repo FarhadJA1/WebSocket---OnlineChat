@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <div class="row" id="user-info">
+        <div class="col-12">
+            <div class="form-group">
+                <label>Add username</label>
+                <input type="text" name="username" class="form-control" id="username" autocomplete="off" />
+                <button class="btn btn-outline-success mt-4" id="join">Join</button>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="display:none" id="message-area">
+        <div class="col-12">
+            <div>Joined as: <span id="joiner">Nobody</span></div>
+            <hr />
+            <div class="row">
+                <div class="col-6">
+                    <ul class="list-group" id="message-list">
+
+                        
+                        
+                    </ul>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <input type="text" name="username" class="form-control" id="message" autocomplete="off" />
+                        <input type="button" name="name"class="btn btn-outline-primary mt-4" id="messageBtn" value="Send Message" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/microsoft/signalr/dist/browser/signalr.min.js">
+</script>
+
+<script>
+    let connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+    let username = "";
+
+    connection.on("RecieveMessage", function (user, message) {
+        let userMessage = user + " says: " + message
+
+        let li = `<li class="list-group-item">${userMessage}</li>`;
+
+        document.getElementById("message-list").innerHTML += li;
+    });
+
+    document.getElementById("messageBtn").addEventListener("click", function () {
+        let message = document.getElementById("message").value;
+
+        connection.invoke("SendMessage", username, message).then(function () {
+            document.getElementById("message").value = "";
+        }).catch(function (err) {
+            console.error(err.toString())
+        });
+    });
+
+
+    connection.start().then(function () {
+
+    }).catch(function (err) {
+        console.error(err.toString())
+    })
+
+    document.getElementById("join").addEventListener("click", function () {
+
+        let usernameInput = document.getElementById("username").value;
+        if (usernameInput == "") {
+            alert("Please add username");
+            return;
+        }
+        username = usernameInput;
+
+        document.getElementById("user-info").style.display = "none";
+        document.getElementById("message-area").style.display = "block";
+        document.getElementById("joiner").innerText = username;
+
+    });
+</script>
